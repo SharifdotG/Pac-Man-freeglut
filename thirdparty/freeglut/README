@@ -1,0 +1,16 @@
+freeglut v3.8.0 for MinGW
+
+This package contains libs(.a) and DLLs for MinGW32 and MinGW-w64.
+Please check out https://www.songho.ca/opengl/gl_freeglut.html for details.
+
+MinGW32
+=======
+Compile Search DIR: .\freeglut\include
+Link Search DIR   : .\freeglut\lib
+Link Option       : freeglut_static
+
+MinGW-w64
+=========
+Compile Search DIR: .\freeglut\include
+Link Search DIR   : .\freeglut\lib\x64
+Link Option       : freeglut_static

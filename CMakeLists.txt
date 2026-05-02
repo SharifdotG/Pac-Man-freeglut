@@ -9,7 +9,10 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-add_executable(pacman src/main.cpp)
+add_executable(pacman
+    src/main.cpp
+    src/util/file.cpp
+)
 
 target_include_directories(pacman PRIVATE
     ${CMAKE_SOURCE_DIR}/src

@@ -1,4 +1,5 @@
 #include <GL/freeglut.h>
+#include "util/direction.h"
 
 namespace {
 
@@ -34,5 +35,6 @@ int main(int argc, char** argv) {
     glutIdleFunc(on_idle);
 
     glutMainLoop();
+    (void)util::Direction::Up;
     return 0;
 }

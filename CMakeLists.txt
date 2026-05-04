@@ -11,6 +11,11 @@ endif()
 
 add_executable(pacman
     src/main.cpp
+    src/core/app.cpp
+    src/core/clock.cpp
+    src/core/game.cpp
+    src/core/rng.cpp
+    src/core/state.cpp
     src/util/file.cpp
 )
 

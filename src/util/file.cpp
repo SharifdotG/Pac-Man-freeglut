@@ -30,7 +30,7 @@ void ensure_exe_dir_resolved() {
     std::string path(buf, n);
     // Normalize backslashes — Windows accepts forward slashes everywhere we
     // care about, and downstream code logs these paths.
-    for (char& ch : path) {
+    for (char &ch : path) {
         if (ch == '\\')
             ch = '/';
     }
@@ -38,14 +38,14 @@ void ensure_exe_dir_resolved() {
     g_exe_dir = (pos == std::string::npos) ? "." : path.substr(0, pos);
 }
 
-}  // namespace
+} // namespace
 
-std::string asset_path(const std::string& relative) {
+std::string asset_path(const std::string &relative) {
     ensure_exe_dir_resolved();
     return g_exe_dir + "/" + relative;
 }
 
-std::optional<std::string> read_text_file(const std::string& path) {
+std::optional<std::string> read_text_file(const std::string &path) {
     std::ifstream f(path, std::ios::binary);
     if (!f) {
         return std::nullopt;
@@ -55,17 +55,17 @@ std::optional<std::string> read_text_file(const std::string& path) {
     return ss.str();
 }
 
-std::string appdata_path(const std::string& relative) {
-    const char* env = std::getenv("APPDATA");
+std::string appdata_path(const std::string &relative) {
+    const char *env = std::getenv("APPDATA");
     std::string base = env ? env : ".";
-    for (char& ch : base) {
+    for (char &ch : base) {
         if (ch == '\\')
             ch = '/';
     }
     return base + "/pacman-fg/" + relative;
 }
 
-bool write_text_file(const std::string& path, const std::string& content) {
+bool write_text_file(const std::string &path, const std::string &content) {
     // Ensure parent directory exists. Errors are tolerated — the open()
     // below will report any real problem.
     const auto last_sep = path.find_last_of("/\\");
@@ -80,4 +80,4 @@ bool write_text_file(const std::string& path, const std::string& content) {
     return f.good();
 }
 
-}  // namespace util
+} // namespace util

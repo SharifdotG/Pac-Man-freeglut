@@ -18,9 +18,13 @@
 #include "gameplay/collision.h"
 #include "input/input.h"
 #include "render/camera.h"
+#endif
 #include "render/gl_init.h"
+#if 0
 #include "render/particles.h"
+#endif
 #include "render/primitives.h"
+#if 0
 #include "render/text.h"
 #include "ui/gameover.h"
 #include "ui/help.h"

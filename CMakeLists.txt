@@ -19,6 +19,7 @@ add_executable(pacman
     src/util/file.cpp
     src/render/gl_init.cpp
     src/render/primitives.cpp
+    src/render/text.cpp
 )
 
 target_include_directories(pacman PRIVATE

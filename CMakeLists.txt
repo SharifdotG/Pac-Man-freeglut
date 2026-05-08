@@ -20,6 +20,9 @@ add_executable(pacman
     src/render/gl_init.cpp
     src/render/primitives.cpp
     src/render/text.cpp
+    src/world/level_loader.cpp
+    src/world/maze.cpp
+    src/world/tile.cpp
 )
 
 target_include_directories(pacman PRIVATE
@@ -41,4 +44,7 @@ add_custom_command(TARGET pacman POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/thirdparty/freeglut/bin/libfreeglut.dll
         $<TARGET_FILE_DIR:pacman>/libfreeglut.dll
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:pacman>/assets
 )

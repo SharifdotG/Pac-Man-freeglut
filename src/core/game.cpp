@@ -24,16 +24,16 @@
 #include "render/particles.h"
 #endif
 #include "render/primitives.h"
-#if 0
 #include "render/text.h"
+#include "world/level_loader.h"
+#include "world/tile.h"
+#if 0
 #include "ui/gameover.h"
 #include "ui/help.h"
 #include "ui/hud.h"
 #include "ui/menu.h"
 #include "ui/pause.h"
 #include "ui/settings.h"
-#include "world/level_loader.h"
-#include "world/tile.h"
 #endif
 
 #if 0
@@ -1528,11 +1528,129 @@ void Game::render_maze() {
 }  // namespace core
 #endif // 0
 
+namespace {
+
+constexpr render::Color kPlaceholderColor = {0.06f, 0.06f, 0.10f, 1.0f};
+
+constexpr render::Color kWallColor = {0.13f, 0.13f, 0.87f, 1.0f};
+constexpr render::Color kDoorColor = {0.95f, 0.72f, 0.85f, 1.0f};
+constexpr render::Color kDotColor = {1.00f, 0.85f, 0.62f, 1.0f};
+constexpr render::Color kPelletColor = {1.00f, 0.85f, 0.62f, 1.0f};
+
+constexpr float kWallStroke = 2.5f;
+constexpr float kWallInset = 1.0f;
+constexpr float kDotRadius = 2.0f;
+constexpr float kPelletRadius = 6.0f;
+
+constexpr float kDoorOpenDuration = 0.5f;
+
+constexpr int kNumLevels = 3;
+constexpr const char* kLevelFiles[kNumLevels] = {
+    "assets/levels/level_01.txt",
+    "assets/levels/level_02.txt",
+    "assets/levels/level_03.txt",
+};
+
+void draw_placeholder_play_area() {
+    render::set_color(kPlaceholderColor);
+    render::draw_quad(0.0f,
+                      0.0f,
+                      static_cast<float>(world::kPlayAreaWidth),
+                      static_cast<float>(world::kPlayAreaHeight));
+}
+
+void draw_wall_tile_edges(const world::Maze& m, int col, int row) {
+    const float x0 = static_cast<float>(world::tile_to_px(col)) + kWallInset;
+    const float y0 = static_cast<float>(world::tile_to_px(row)) + kWallInset;
+    const float x1 = x0 + static_cast<float>(world::kTileSize) - 2.0f * kWallInset;
+    const float y1 = y0 + static_cast<float>(world::kTileSize) - 2.0f * kWallInset;
+    if (!m.is_wall(col, row - 1))
+        render::draw_line(x0, y0, x1, y0, kWallStroke);
+    if (!m.is_wall(col, row + 1))
+        render::draw_line(x0, y1, x1, y1, kWallStroke);
+    if (!m.is_wall(col - 1, row))
+        render::draw_line(x0, y0, x0, y1, kWallStroke);
+    if (!m.is_wall(col + 1, row))
+        render::draw_line(x1, y0, x1, y1, kWallStroke);
+}
+
+}  // namespace
+
 namespace core {
 
+bool Game::load_level(int level_index) {
+    if (level_index < 0 || level_index >= kNumLevels)
+        return false;
+
+    auto maze = world::load_level_file(kLevelFiles[level_index]);
+    if (!maze)
+        return false;
+
+    m_maze = *maze;
+    m_level_index = level_index;
+    return true;
+}
+
+void Game::render_maze() {
+    if (!m_maze)
+        return;
+    const world::Maze& m = *m_maze;
+
+    render::set_color(kWallColor);
+    for (int row = 0; row < world::kRows; ++row) {
+        for (int col = 0; col < world::kCols; ++col) {
+            if (m.at(col, row) == world::TileType::Wall) {
+                draw_wall_tile_edges(m, col, row);
+            }
+        }
+    }
+
+    const float door_alpha =
+        (m_door_open_timer > 0.0f) ? (1.0f - m_door_open_timer / kDoorOpenDuration) : 1.0f;
+    render::set_color({kDoorColor.r, kDoorColor.g, kDoorColor.b, door_alpha});
+    for (int row = 0; row < world::kRows; ++row) {
+        for (int col = 0; col < world::kCols; ++col) {
+            if (m.at(col, row) == world::TileType::GhostDoor) {
+                const float x = static_cast<float>(world::tile_to_px(col));
+                const float y =
+                    static_cast<float>(world::tile_to_px(row)) + world::kTileSize * 0.5f - 1.5f;
+                render::draw_quad(x, y, static_cast<float>(world::kTileSize), 3.0f);
+            }
+        }
+    }
+
+    render::set_color(kDotColor);
+    for (int row = 0; row < world::kRows; ++row) {
+        for (int col = 0; col < world::kCols; ++col) {
+            if (m.at(col, row) == world::TileType::Dot) {
+                const float cx = static_cast<float>(world::tile_center_px(col));
+                const float cy = static_cast<float>(world::tile_center_px(row));
+                render::draw_quad(
+                    cx - kDotRadius, cy - kDotRadius, kDotRadius * 2.0f, kDotRadius * 2.0f);
+            }
+        }
+    }
+
+    const float pulse_t = static_cast<float>(glutGet(GLUT_ELAPSED_TIME)) * 0.001f;
+    const float pulse_r = kPelletRadius + 1.5f * std::sin(pulse_t * 3.6f);
+    render::set_color(kPelletColor);
+    for (int row = 0; row < world::kRows; ++row) {
+        for (int col = 0; col < world::kCols; ++col) {
+            if (m.at(col, row) == world::TileType::PowerPellet) {
+                const float cx = static_cast<float>(world::tile_center_px(col));
+                const float cy = static_cast<float>(world::tile_center_px(row));
+                render::draw_filled_circle(cx, cy, pulse_r);
+            }
+        }
+    }
+}
+
 bool Game::init() {
+    render::init_gl();
+    if (!load_level(0)) {
+        std::printf("[pacman:WARN] level load failed; drawing placeholder.\n");
+    }
     enter_state(GameState::Splash);
-    // TODO: stub
     return true;
 }
 
@@ -1542,7 +1660,28 @@ void Game::update(double dt_seconds) {
 }
 
 void Game::render() {
-    // TODO: stub
+    render::clear_and_apply_viewport();
+
+    switch (m_state) {
+        case GameState::Menu: {
+            draw_placeholder_play_area();
+            const float cx = static_cast<float>(world::kPlayAreaWidth) * 0.5f;
+            const float cy = static_cast<float>(world::kPlayAreaHeight) * 0.5f;
+            render::set_color({1.0f, 0.92f, 0.16f, 1.0f});
+            render::draw_text_centered(cx, cy, "PAC-MAN");
+            return;
+        }
+        case GameState::Playing:
+            if (m_maze) {
+                render_maze();
+                return;
+            }
+            draw_placeholder_play_area();
+            return;
+        default:
+            draw_placeholder_play_area();
+            return;
+    }
 }
 
 void Game::save_user_settings() {

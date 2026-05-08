@@ -17,10 +17,7 @@
 #endif
 
 #include "util/direction.h"
-
-#if 0
 #include "world/maze.h"
-#endif
 
 namespace core {
 
@@ -88,8 +85,9 @@ class Game {
     // or any other Pac-unreachable region.
     void compute_reachable_tiles();
 
-#if 0
     std::optional<world::Maze> m_maze;
+
+#if 0
     gameplay::Pacman m_pacman;
     std::array<gameplay::Ghost, 4> m_ghosts;
     gameplay::WaveTimer m_wave;

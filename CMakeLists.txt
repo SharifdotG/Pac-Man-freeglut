@@ -17,6 +17,9 @@ add_executable(pacman
     src/core/rng.cpp
     src/core/state.cpp
     src/gameplay/pacman.cpp
+    src/gameplay/ghost.cpp
+    src/gameplay/ghost_ai.cpp
+    src/gameplay/modes.cpp
     src/input/input.cpp
     src/util/file.cpp
     src/render/gl_init.cpp

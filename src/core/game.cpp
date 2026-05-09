@@ -13,10 +13,11 @@
 
 #include "util/file.h"
 
+#include "input/input.h"
+
 #if 0
 #include "audio/audio.h"
 #include "gameplay/collision.h"
-#include "input/input.h"
 #include "render/camera.h"
 #endif
 #include "render/gl_init.h"
@@ -1588,6 +1589,11 @@ bool Game::load_level(int level_index) {
 
     m_maze = *maze;
     m_level_index = level_index;
+
+    const auto& s = m_maze->spawns();
+    gameplay::pacman_init(m_pacman, s.pac_col, s.pac_row);
+    input::state().wanted = util::Direction::None;
+
     return true;
 }
 
@@ -1650,13 +1656,20 @@ bool Game::init() {
     if (!load_level(0)) {
         std::printf("[pacman:WARN] level load failed; drawing placeholder.\n");
     }
-    enter_state(GameState::Splash);
+    // WORKING: jump straight into gameplay so input + Pac-Man can be tested.
+    enter_state(GameState::Playing);
     return true;
 }
 
 void Game::update(double dt_seconds) {
-    m_state_timer += static_cast<float>(dt_seconds);
-    // TODO: stub
+    const float dt = static_cast<float>(dt_seconds);
+    m_state_timer += dt;
+
+    if (m_state == GameState::Playing && m_maze) {
+        gameplay::pacman_update(m_pacman, dt, *m_maze);
+    }
+
+    input::clear_press_flags();
 }
 
 void Game::render() {
@@ -1674,6 +1687,7 @@ void Game::render() {
         case GameState::Playing:
             if (m_maze) {
                 render_maze();
+                gameplay::pacman_render(m_pacman);
                 return;
             }
             draw_placeholder_play_area();

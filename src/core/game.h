@@ -6,12 +6,13 @@
 
 #include "core/state.h"
 
+#include "gameplay/pacman.h"
+
 #if 0
 #include "gameplay/combo.h"
 #include "gameplay/fruit.h"
 #include "gameplay/ghost.h"
 #include "gameplay/modes.h"
-#include "gameplay/pacman.h"
 #include "gameplay/perks.h"
 #include "gameplay/score.h"
 #endif
@@ -87,8 +88,8 @@ class Game {
 
     std::optional<world::Maze> m_maze;
 
-#if 0
     gameplay::Pacman m_pacman;
+#if 0
     std::array<gameplay::Ghost, 4> m_ghosts;
     gameplay::WaveTimer m_wave;
     gameplay::Score m_score;

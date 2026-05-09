@@ -14,6 +14,8 @@
 #include "util/file.h"
 
 #include "input/input.h"
+#include "gameplay/collision.h"
+#include "ui/hud.h"
 
 #if 0
 #include "audio/audio.h"
@@ -1544,6 +1546,11 @@ constexpr float kDotRadius = 2.0f;
 constexpr float kPelletRadius = 6.0f;
 
 constexpr float kDoorOpenDuration = 0.5f;
+constexpr float kBaseGhostSpeed = 5.5f;
+constexpr float kBasePacSpeed = 6.5f;
+constexpr float kGhostSpeedPerLevel = 0.08f;
+constexpr float kPacSpeedPerLevel = 0.05f;
+constexpr float kFrightenedDuration = 6.0f;
 
 constexpr int kNumLevels = 3;
 constexpr const char* kLevelFiles[kNumLevels] = {
@@ -1579,6 +1586,14 @@ void draw_wall_tile_edges(const world::Maze& m, int col, int row) {
 
 namespace core {
 
+void Game::start_new_game() {
+    m_score.reset_for_new_game();
+    m_level_index = 0;
+    if (!load_level(0)) {
+        m_maze.reset();
+    }
+}
+
 bool Game::load_level(int level_index) {
     if (level_index < 0 || level_index >= kNumLevels)
         return false;
@@ -1589,12 +1604,57 @@ bool Game::load_level(int level_index) {
 
     m_maze = *maze;
     m_level_index = level_index;
+    m_score.set_level(level_index + 1);
 
     const auto& s = m_maze->spawns();
     gameplay::pacman_init(m_pacman, s.pac_col, s.pac_row);
+    gameplay::ghost_init(m_ghosts[0], gameplay::GhostKind::Blinky, s.blinky_col, s.blinky_row);
+    gameplay::ghost_init(m_ghosts[1], gameplay::GhostKind::Pinky, s.pinky_col, s.pinky_row);
+    gameplay::ghost_init(m_ghosts[2], gameplay::GhostKind::Inky, s.inky_col, s.inky_row);
+    gameplay::ghost_init(m_ghosts[3], gameplay::GhostKind::Clyde, s.clyde_col, s.clyde_row);
+    apply_level_speed_scaling();
+    m_wave.reset();
+    m_eat_chain = 0;
+    m_door_open_timer = 0.0f;
     input::state().wanted = util::Direction::None;
 
     return true;
+}
+
+void Game::apply_level_speed_scaling() {
+    const float lvl = static_cast<float>(m_level_index);
+    const float ghost_mult = 1.0f + kGhostSpeedPerLevel * lvl;
+    const float pac_mult = 1.0f + kPacSpeedPerLevel * lvl;
+    m_pacman.speed_tiles_sec = kBasePacSpeed * pac_mult;
+    for (auto& g : m_ghosts)
+        g.speed_tiles_sec = kBaseGhostSpeed * ghost_mult;
+}
+
+void Game::respawn_actors() {
+    if (!m_maze)
+        return;
+    const auto& s = m_maze->spawns();
+    gameplay::pacman_init(m_pacman, s.pac_col, s.pac_row);
+    gameplay::ghost_init(m_ghosts[0], gameplay::GhostKind::Blinky, s.blinky_col, s.blinky_row);
+    gameplay::ghost_init(m_ghosts[1], gameplay::GhostKind::Pinky, s.pinky_col, s.pinky_row);
+    gameplay::ghost_init(m_ghosts[2], gameplay::GhostKind::Inky, s.inky_col, s.inky_row);
+    gameplay::ghost_init(m_ghosts[3], gameplay::GhostKind::Clyde, s.clyde_col, s.clyde_row);
+    apply_level_speed_scaling();
+    m_wave.reset();
+    m_eat_chain = 0;
+    m_door_open_timer = 0.0f;
+    input::state().wanted = util::Direction::None;
+}
+
+void Game::trigger_frightened() {
+    m_eat_chain = 0;
+    for (auto& g : m_ghosts) {
+        if (g.mode == gameplay::GhostMode::Eaten || g.mode == gameplay::GhostMode::InHouse)
+            continue;
+        g.mode = gameplay::GhostMode::Frightened;
+        g.mode_timer = kFrightenedDuration;
+        g.pending_reverse = true;
+    }
 }
 
 void Game::render_maze() {
@@ -1653,10 +1713,10 @@ void Game::render_maze() {
 
 bool Game::init() {
     render::init_gl();
-    if (!load_level(0)) {
+    start_new_game();
+    if (!m_maze) {
         std::printf("[pacman:WARN] level load failed; drawing placeholder.\n");
     }
-    // WORKING: jump straight into gameplay so input + Pac-Man can be tested.
     enter_state(GameState::Playing);
     return true;
 }
@@ -1666,7 +1726,88 @@ void Game::update(double dt_seconds) {
     m_state_timer += dt;
 
     if (m_state == GameState::Playing && m_maze) {
+        const int prev_col = m_pacman.col;
+        const int prev_row = m_pacman.row;
         gameplay::pacman_update(m_pacman, dt, *m_maze);
+
+        if (m_pacman.col != prev_col || m_pacman.row != prev_row) {
+            const int points = m_maze->eat_at(m_pacman.col, m_pacman.row);
+            if (points > 0) {
+                m_score.add_points(points);
+                if (points == gameplay::Score::kPointsPerPellet) {
+                    trigger_frightened();
+                }
+            }
+        }
+
+        m_wave.update(dt);
+        if (m_wave.consume_just_changed()) {
+            for (auto& g : m_ghosts) {
+                if (g.mode == gameplay::GhostMode::Frightened ||
+                    g.mode == gameplay::GhostMode::Eaten || g.mode == gameplay::GhostMode::InHouse)
+                    continue;
+                g.mode = (m_wave.current_mode() == gameplay::WaveMode::Scatter)
+                             ? gameplay::GhostMode::Scatter
+                             : gameplay::GhostMode::Chase;
+                g.pending_reverse = true;
+            }
+        }
+
+        bool was_in_house[4];
+        for (int i = 0; i < 4; ++i) {
+            was_in_house[i] = (m_ghosts[i].mode == gameplay::GhostMode::InHouse);
+        }
+
+        gameplay::ghost_update(m_ghosts[0], dt, *m_maze, m_pacman, m_ghosts[0], m_wave.current_mode());
+        for (int i = 1; i < 4; ++i) {
+            gameplay::ghost_update(
+                m_ghosts[i], dt, *m_maze, m_pacman, m_ghosts[0], m_wave.current_mode());
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            if (was_in_house[i] && m_ghosts[i].mode != gameplay::GhostMode::InHouse) {
+                m_door_open_timer = kDoorOpenDuration;
+            }
+        }
+        if (m_door_open_timer > 0.0f) {
+            m_door_open_timer -= dt;
+            if (m_door_open_timer < 0.0f)
+                m_door_open_timer = 0.0f;
+        }
+
+        for (auto& g : m_ghosts) {
+            if (g.mode == gameplay::GhostMode::InHouse || g.mode == gameplay::GhostMode::Eaten)
+                continue;
+            if (!gameplay::pac_ghost_overlap(m_pacman, g))
+                continue;
+
+            if (g.mode == gameplay::GhostMode::Frightened) {
+                const int chain_idx = (m_eat_chain < 4) ? m_eat_chain : 3;
+                const int pts = 200 << chain_idx;
+                m_score.add_points(pts);
+                if (m_eat_chain < 4)
+                    ++m_eat_chain;
+                g.mode = gameplay::GhostMode::Eaten;
+                g.mode_timer = 0.0f;
+                continue;
+            }
+
+            m_score.lose_life();
+            if (m_score.game_over()) {
+                start_new_game();
+            } else {
+                respawn_actors();
+            }
+            input::clear_press_flags();
+            return;
+        }
+
+        if (m_maze->dots_remaining() == 0) {
+            const int next_level = m_level_index + 1;
+            if (!load_level(next_level)) {
+                start_new_game();
+            }
+        }
     }
 
     input::clear_press_flags();
@@ -1675,27 +1816,16 @@ void Game::update(double dt_seconds) {
 void Game::render() {
     render::clear_and_apply_viewport();
 
-    switch (m_state) {
-        case GameState::Menu: {
-            draw_placeholder_play_area();
-            const float cx = static_cast<float>(world::kPlayAreaWidth) * 0.5f;
-            const float cy = static_cast<float>(world::kPlayAreaHeight) * 0.5f;
-            render::set_color({1.0f, 0.92f, 0.16f, 1.0f});
-            render::draw_text_centered(cx, cy, "PAC-MAN");
-            return;
+    if (m_maze) {
+        render_maze();
+        gameplay::pacman_render(m_pacman);
+        for (const auto& g : m_ghosts) {
+            gameplay::ghost_render(g);
         }
-        case GameState::Playing:
-            if (m_maze) {
-                render_maze();
-                gameplay::pacman_render(m_pacman);
-                return;
-            }
-            draw_placeholder_play_area();
-            return;
-        default:
-            draw_placeholder_play_area();
-            return;
+    } else {
+        draw_placeholder_play_area();
     }
+    ui::render_hud(m_score);
 }
 
 void Game::save_user_settings() {

@@ -25,6 +25,8 @@ add_executable(pacman
     src/world/level_loader.cpp
     src/world/maze.cpp
     src/world/tile.cpp
+    src/gameplay/collision.cpp
+    src/world/pathfind.cpp
 )
 
 target_include_directories(pacman PRIVATE

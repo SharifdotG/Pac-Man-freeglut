@@ -27,6 +27,8 @@ add_executable(pacman
     src/world/tile.cpp
     src/gameplay/collision.cpp
     src/world/pathfind.cpp
+    src/gameplay/score.cpp
+    src/ui/hud.cpp
 )
 
 target_include_directories(pacman PRIVATE

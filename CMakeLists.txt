@@ -32,6 +32,7 @@ add_executable(pacman
     src/world/pathfind.cpp
     src/gameplay/score.cpp
     src/ui/hud.cpp
+    src/audio/audio.cpp
 )
 
 target_include_directories(pacman PRIVATE

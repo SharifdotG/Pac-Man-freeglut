@@ -36,6 +36,8 @@ add_executable(pacman
     src/gameplay/fruit.cpp
     src/gameplay/combo.cpp
     src/gameplay/perks.cpp
+    src/ui/menu.cpp
+    src/ui/help.cpp
 )
 
 target_include_directories(pacman PRIVATE

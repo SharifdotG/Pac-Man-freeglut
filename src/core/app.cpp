@@ -7,11 +7,8 @@
 #include "core/clock.h"
 #include "core/game.h"
 
-#if 0
-#include "audio/audio.h"
 #include "input/input.h"
 #include "render/gl_init.h"
-#endif
 
 namespace core {
 
@@ -49,8 +46,8 @@ void on_display() {
     glutSwapBuffers();
 }
 
-void on_reshape(int /*w*/, int /*h*/) {
-    // TODO: stub
+void on_reshape(int w, int h) {
+    render::on_reshape(w, h);
 }
 
 // Wall-clock driven loop (~60 Hz). Using glutTimerFunc instead of
@@ -65,7 +62,14 @@ void on_timer(int /*value*/) {
         return;
     }
 
-    // TODO: stub
+    auto& in = input::state();
+    if (in.quit_requested) {
+        g_quit_requested = true;
+    }
+    if (in.press_fullscreen) {
+        toggle_fullscreen();
+        in.press_fullscreen = false;
+    }
 
     const int updates = g_clock.tick();
     for (int i = 0; i < updates; ++i) {
@@ -106,11 +110,10 @@ int run_app(int argc, char **argv) {
     glutInitWindowPosition(100, 60);
     glutCreateWindow(kWindowTitle);
 
-    // TODO: stub
     g_clock.reset();
+    render::on_reshape(kWindowWidth, kWindowHeight);
 
     // Audio init is non-fatal: the game runs silent on backend failure.
-    // TODO: stub
 
     if (!g_game.init()) {
         std::printf("[pacman:FATAL] game::init() failed — exiting.\n");
@@ -119,6 +122,10 @@ int run_app(int argc, char **argv) {
 
     glutDisplayFunc(on_display);
     glutReshapeFunc(on_reshape);
+    glutKeyboardFunc(input::on_keyboard_down);
+    glutKeyboardUpFunc(input::on_keyboard_up);
+    glutSpecialFunc(input::on_special_down);
+    glutSpecialUpFunc(input::on_special_up);
     glutCloseFunc(on_close);
     glutTimerFunc(kFrameIntervalMs, on_timer, 0);
 
@@ -136,7 +143,6 @@ int run_app(int argc, char **argv) {
     // P11: persist hi-score + volume preferences before audio shuts down,
     // so a fresh launch picks them up.
     g_game.save_user_settings();
-    // TODO: stub
     std::printf("[pacman] clean shutdown.\n");
     std::fflush(stdout);
     return 0;

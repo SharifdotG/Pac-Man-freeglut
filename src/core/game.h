@@ -6,16 +6,10 @@
 
 #include "core/state.h"
 
-#include "gameplay/pacman.h"
-
-#if 0
-#include "gameplay/combo.h"
-#include "gameplay/fruit.h"
 #include "gameplay/ghost.h"
 #include "gameplay/modes.h"
-#include "gameplay/perks.h"
+#include "gameplay/pacman.h"
 #include "gameplay/score.h"
-#endif
 
 #include "util/direction.h"
 #include "world/maze.h"
@@ -89,12 +83,9 @@ class Game {
     std::optional<world::Maze> m_maze;
 
     gameplay::Pacman m_pacman;
-#if 0
     std::array<gameplay::Ghost, 4> m_ghosts;
     gameplay::WaveTimer m_wave;
     gameplay::Score m_score;
-    gameplay::Fruit m_fruit;
-#endif
 
     GameState m_state = GameState::Splash;
     float m_state_timer = 0.0f;

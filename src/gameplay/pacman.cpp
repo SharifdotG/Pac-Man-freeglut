@@ -27,11 +27,8 @@ constexpr float kPacRadius = 11.0f;
 // Yellow used by the original arcade — saturated, slightly green-shifted.
 constexpr render::Color kPacColor = {1.0f, 0.92f, 0.16f, 1.0f};
 
-// TEMP: Collision module ships tomorrow. For now, do not block movement.
-// This function returns whether Pac would collide with the world at the given
-// tile.
-bool collision_check_world(const world::Maze& /*m*/, int /*col*/, int /*row*/) {
-    return false;
+bool collision_check_world(const world::Maze& m, int col, int row) {
+    return !m.walkable_for_pac(col, row);
 }
 
 bool walkable_with_wrap(const world::Maze& m, int col, int row) {

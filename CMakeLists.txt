@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(pacman_fg VERSION 0.1.1 LANGUAGES CXX)
+project(pacman_fg VERSION 0.9.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -17,6 +17,9 @@ add_executable(pacman
     src/core/rng.cpp
     src/core/state.cpp
     src/gameplay/pacman.cpp
+    src/gameplay/ghost.cpp
+    src/gameplay/ghost_ai.cpp
+    src/gameplay/modes.cpp
     src/input/input.cpp
     src/util/file.cpp
     src/render/gl_init.cpp
@@ -25,6 +28,11 @@ add_executable(pacman
     src/world/level_loader.cpp
     src/world/maze.cpp
     src/world/tile.cpp
+    src/gameplay/collision.cpp
+    src/world/pathfind.cpp
+    src/gameplay/score.cpp
+    src/ui/hud.cpp
+    src/audio/audio.cpp
     src/gameplay/fruit.cpp
     src/gameplay/combo.cpp
     src/gameplay/perks.cpp

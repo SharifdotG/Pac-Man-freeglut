@@ -38,6 +38,8 @@ add_executable(pacman
     src/gameplay/perks.cpp
     src/ui/menu.cpp
     src/ui/help.cpp
+    src/ui/pause.cpp
+    src/ui/gameover.cpp
 )
 
 target_include_directories(pacman PRIVATE

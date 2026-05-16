@@ -46,7 +46,7 @@ If you hit a build error, check [docs/12-build-troubleshooting.md](docs/12-build
 
 ## Download
 
-If you just want to play without building, grab the latest release from the [Releases](https://github.com/SharifdotG/Pac-Man-freeglut/releases/download/v1.0.0/Pac-Man.freeglut.v1.0.0.zip) page. It's a zip of the `build/bin/` folder with everything needed to run. Unzip, then double-click `pacman.exe` to play. The hi-score and volume settings will persist across runs in `%APPDATA%/pacman-freeglut/savedata.txt`.
+If you just want to play without building, grab the latest release from the [Releases](https://github.com/SharifdotG/Pac-Man-freeglut/releases) page. It's a zip of the `build/bin/` folder with everything needed to run. Unzip, then double-click `pacman.exe` to play. The hi-score and volume settings will persist across runs in `%APPDATA%/pacman-freeglut/savedata.txt`.
 
 ## Controls
 

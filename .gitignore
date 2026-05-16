@@ -3,7 +3,6 @@
 *.o
 *.obj
 *.exe
-*.dll
 *.lib
 *.exp
 *.pdb

@@ -27,22 +27,13 @@ constexpr float kPacRadius = 11.0f;
 // Yellow used by the original arcade — saturated, slightly green-shifted.
 constexpr render::Color kPacColor = {1.0f, 0.92f, 0.16f, 1.0f};
 
-bool collision_check_world(const world::Maze& m, int col, int row) {
-    return !m.walkable_for_pac(col, row);
-}
-
 bool walkable_with_wrap(const world::Maze& m, int col, int row) {
-    // Keep Pac inside the maze bounds on the row axis.
-    if (row < 0 || row >= world::kRows)
-        return false;
-
     // Tunnel wrap: any column off the grid maps to the opposite edge.
     if (col < 0)
         col += world::kCols;
     else if (col >= world::kCols)
         col -= world::kCols;
-
-    return !collision_check_world(m, col, row);
+    return m.walkable_for_pac(col, row);
 }
 
 // Center-angle (radians, screen coords with y-down) of Pac's mouth for each

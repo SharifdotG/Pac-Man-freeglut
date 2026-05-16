@@ -24,8 +24,8 @@ If `g++` isn't found, add `C:/mingw64/bin` to your `PATH`.
 ## 2. Clone and configure
 
 ```bash
-git clone <repo-url> pacman-fg
-cd pacman-fg
+git clone https://github.com/SharifdotG/Pac-Man-freeglut.git
+cd pacman-freeglut
 cmake -G "MinGW Makefiles" -S . -B build
 ```
 

@@ -26,4 +26,4 @@ float master_volume();
 float sfx_volume();
 float bgm_volume();
 
-}  // namespace audio
+} // namespace audio

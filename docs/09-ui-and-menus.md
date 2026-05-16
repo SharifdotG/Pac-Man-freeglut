@@ -71,7 +71,7 @@ Implementation: [src/ui/menu.cpp](../src/ui/menu.cpp).
               HIGH SCORE: 12340
 
        Use Arrow keys / WASD + Enter to navigate
-        CSE 426 Computer Graphics Lab — Spring 2025
+        CSE 426 Computer Graphics Lab — Fall 2025
 ```
 
 `render_main_menu(selected, hi_score)` takes the cursor index (0..2) and

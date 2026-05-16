@@ -15,10 +15,12 @@ namespace particles {
 // (~4 each) plus the ambient combo-popup activity stays well under the
 // reserved cap.
 
-void emit_sparkle(float x, float y, Color color);           // 4 small particles, ~200ms
-void emit_burst(float x, float y, int count, Color color);  // radial burst, ~500ms
-void emit_ring(float x, float y, Color color);              // expanding ring (perk pickup)
-void emit_dissolve(float x, float y, Color color);          // ~30 particles, slow drift (death)
+void emit_sparkle(float x, float y, Color color);  // 4 small particles, ~200ms
+void emit_burst(float x, float y, int count,
+                Color color);                   // radial burst, ~500ms
+void emit_ring(float x, float y, Color color);  // expanding ring (perk pickup)
+void emit_dissolve(float x, float y,
+                   Color color);  // ~30 particles, slow drift (death)
 
 void update(float dt);
 void render();

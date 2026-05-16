@@ -51,34 +51,42 @@ constexpr int kSampleRate = 22050;
 constexpr float kPi = 3.14159265358979323846f;
 
 class Synth {
-   public:
-    Synth() {
-        m_samples.reserve(static_cast<std::size_t>(kSampleRate));
-    }
+  public:
+    Synth() { m_samples.reserve(static_cast<std::size_t>(kSampleRate)); }
 
     // Continuous sine. `fade_out` applies a linear amplitude ramp to zero.
-    void add_sine(float freq, float duration_sec, float amp = 0.45f, bool fade_out = true) {
-        const int n = static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
+    void add_sine(float freq, float duration_sec, float amp = 0.45f,
+                  bool fade_out = true) {
+        const int n =
+            static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
         const std::size_t start = m_samples.size();
         m_samples.resize(start + static_cast<std::size_t>(n));
         for (int i = 0; i < n; ++i) {
-            const float t = static_cast<float>(i) / static_cast<float>(kSampleRate);
+            const float t =
+                static_cast<float>(i) / static_cast<float>(kSampleRate);
             const float env =
-                fade_out ? (1.0f - static_cast<float>(i) / static_cast<float>(n)) : 1.0f;
+                fade_out
+                    ? (1.0f - static_cast<float>(i) / static_cast<float>(n))
+                    : 1.0f;
             const float s = amp * env * std::sin(2.0f * kPi * freq * t);
             m_samples[start + static_cast<std::size_t>(i)] = pcm_clip(s);
         }
     }
 
     // Square wave — punchier than sine, classic chiptune timbre.
-    void add_square(float freq, float duration_sec, float amp = 0.30f, bool fade_out = true) {
-        const int n = static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
+    void add_square(float freq, float duration_sec, float amp = 0.30f,
+                    bool fade_out = true) {
+        const int n =
+            static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
         const std::size_t start = m_samples.size();
         m_samples.resize(start + static_cast<std::size_t>(n));
         for (int i = 0; i < n; ++i) {
-            const float t = static_cast<float>(i) / static_cast<float>(kSampleRate);
+            const float t =
+                static_cast<float>(i) / static_cast<float>(kSampleRate);
             const float env =
-                fade_out ? (1.0f - static_cast<float>(i) / static_cast<float>(n)) : 1.0f;
+                fade_out
+                    ? (1.0f - static_cast<float>(i) / static_cast<float>(n))
+                    : 1.0f;
             const float phase = std::fmod(freq * t, 1.0f);
             const float s = amp * env * (phase < 0.5f ? 1.0f : -1.0f);
             m_samples[start + static_cast<std::size_t>(i)] = pcm_clip(s);
@@ -87,7 +95,8 @@ class Synth {
 
     // Linear-frequency sweep (good for "death" descender, "level start" rise).
     void add_sweep(float f0, float f1, float duration_sec, float amp = 0.45f) {
-        const int n = static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
+        const int n =
+            static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
         const std::size_t start = m_samples.size();
         m_samples.resize(start + static_cast<std::size_t>(n));
         // Phase accumulator avoids the "nyquist popping" you get from
@@ -97,27 +106,31 @@ class Synth {
             const float u = static_cast<float>(i) / static_cast<float>(n);
             const float freq = f0 + (f1 - f0) * u;
             phase += 2.0f * kPi * freq / static_cast<float>(kSampleRate);
-            const float env = 1.0f - 0.6f * u;  // gentle fade
+            const float env = 1.0f - 0.6f * u; // gentle fade
             const float s = amp * env * std::sin(phase);
             m_samples[start + static_cast<std::size_t>(i)] = pcm_clip(s);
         }
     }
 
     void add_silence(float duration_sec) {
-        const int n = static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
+        const int n =
+            static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
         m_samples.insert(m_samples.end(), static_cast<std::size_t>(n), 0);
     }
 
     // Frequency-modulated square — used for the BGM siren wobble.
-    void add_wobble_square(
-        float center_hz, float amp_hz, float wobble_hz, float duration_sec, float amp = 0.22f) {
-        const int n = static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
+    void add_wobble_square(float center_hz, float amp_hz, float wobble_hz,
+                           float duration_sec, float amp = 0.22f) {
+        const int n =
+            static_cast<int>(static_cast<float>(kSampleRate) * duration_sec);
         const std::size_t start = m_samples.size();
         m_samples.resize(start + static_cast<std::size_t>(n));
         float phase = 0.0f;
         for (int i = 0; i < n; ++i) {
-            const float t = static_cast<float>(i) / static_cast<float>(kSampleRate);
-            const float freq = center_hz + amp_hz * std::sin(2.0f * kPi * wobble_hz * t);
+            const float t =
+                static_cast<float>(i) / static_cast<float>(kSampleRate);
+            const float freq =
+                center_hz + amp_hz * std::sin(2.0f * kPi * wobble_hz * t);
             phase += 2.0f * kPi * freq / static_cast<float>(kSampleRate);
             const float wave = std::sin(phase) >= 0.0f ? 1.0f : -1.0f;
             const float s = amp * wave;
@@ -129,19 +142,21 @@ class Synth {
     std::vector<std::uint8_t> to_wav() const {
         std::vector<std::uint8_t> out;
         out.reserve(44 + m_samples.size() * 2);
-        const std::uint32_t data_size = static_cast<std::uint32_t>(m_samples.size() * 2);
-        const std::uint32_t byte_rate = static_cast<std::uint32_t>(kSampleRate) * 2u;
+        const std::uint32_t data_size =
+            static_cast<std::uint32_t>(m_samples.size() * 2);
+        const std::uint32_t byte_rate =
+            static_cast<std::uint32_t>(kSampleRate) * 2u;
         write_str(out, "RIFF");
         write_u32(out, 36u + data_size);
         write_str(out, "WAVE");
         write_str(out, "fmt ");
-        write_u32(out, 16u);  // PCM fmt chunk size
-        write_u16(out, 1u);   // PCM format
-        write_u16(out, 1u);   // mono
+        write_u32(out, 16u); // PCM fmt chunk size
+        write_u16(out, 1u);  // PCM format
+        write_u16(out, 1u);  // mono
         write_u32(out, static_cast<std::uint32_t>(kSampleRate));
         write_u32(out, byte_rate);
-        write_u16(out, 2u);   // block align (mono * 16-bit)
-        write_u16(out, 16u);  // bits per sample
+        write_u16(out, 2u);  // block align (mono * 16-bit)
+        write_u16(out, 16u); // bits per sample
         write_str(out, "data");
         write_u32(out, data_size);
         for (std::int16_t s : m_samples) {
@@ -151,7 +166,7 @@ class Synth {
         return out;
     }
 
-   private:
+  private:
     static std::int16_t pcm_clip(float s) {
         if (s > 1.0f)
             s = 1.0f;
@@ -159,17 +174,17 @@ class Synth {
             s = -1.0f;
         return static_cast<std::int16_t>(s * 32000.0f);
     }
-    static void write_u16(std::vector<std::uint8_t>& out, std::uint16_t v) {
+    static void write_u16(std::vector<std::uint8_t> &out, std::uint16_t v) {
         out.push_back(static_cast<std::uint8_t>(v & 0xFF));
         out.push_back(static_cast<std::uint8_t>((v >> 8) & 0xFF));
     }
-    static void write_u32(std::vector<std::uint8_t>& out, std::uint32_t v) {
+    static void write_u32(std::vector<std::uint8_t> &out, std::uint32_t v) {
         out.push_back(static_cast<std::uint8_t>(v & 0xFF));
         out.push_back(static_cast<std::uint8_t>((v >> 8) & 0xFF));
         out.push_back(static_cast<std::uint8_t>((v >> 16) & 0xFF));
         out.push_back(static_cast<std::uint8_t>((v >> 24) & 0xFF));
     }
-    static void write_str(std::vector<std::uint8_t>& out, const char* s) {
+    static void write_str(std::vector<std::uint8_t> &out, const char *s) {
         for (int i = 0; s[i] != 0; ++i) {
             out.push_back(static_cast<std::uint8_t>(s[i]));
         }
@@ -185,57 +200,57 @@ class Synth {
 std::vector<std::uint8_t> make_sfx(SfxId id) {
     Synth s;
     switch (id) {
-        case SfxId::Chomp:
-            // Tiny mid-pitch pop.
-            s.add_square(560.0f, 0.060f, 0.32f, true);
-            break;
+    case SfxId::Chomp:
+        // Tiny mid-pitch pop.
+        s.add_square(560.0f, 0.060f, 0.32f, true);
+        break;
 
-        case SfxId::PowerPellet:
-            // Up-and-down trill.
-            s.add_sine(540.0f, 0.05f, 0.40f, false);
-            s.add_sine(820.0f, 0.05f, 0.40f, false);
-            s.add_sine(540.0f, 0.05f, 0.40f, false);
-            s.add_sine(820.0f, 0.08f, 0.40f, true);
-            break;
+    case SfxId::PowerPellet:
+        // Up-and-down trill.
+        s.add_sine(540.0f, 0.05f, 0.40f, false);
+        s.add_sine(820.0f, 0.05f, 0.40f, false);
+        s.add_sine(540.0f, 0.05f, 0.40f, false);
+        s.add_sine(820.0f, 0.08f, 0.40f, true);
+        break;
 
-        case SfxId::EatGhost:
-            // Quick rising sweep with bright tail.
-            s.add_sweep(220.0f, 880.0f, 0.30f, 0.40f);
-            break;
+    case SfxId::EatGhost:
+        // Quick rising sweep with bright tail.
+        s.add_sweep(220.0f, 880.0f, 0.30f, 0.40f);
+        break;
 
-        case SfxId::EatFruit:
-            // Two-note arpeggio: bright + brighter.
-            s.add_sine(880.0f, 0.10f, 0.45f, false);
-            s.add_sine(1320.0f, 0.18f, 0.45f, true);
-            break;
+    case SfxId::EatFruit:
+        // Two-note arpeggio: bright + brighter.
+        s.add_sine(880.0f, 0.10f, 0.45f, false);
+        s.add_sine(1320.0f, 0.18f, 0.45f, true);
+        break;
 
-        case SfxId::Death:
-            // Long descending sweep — the "you screwed up" cue.
-            s.add_sweep(880.0f, 110.0f, 1.20f, 0.50f);
-            break;
+    case SfxId::Death:
+        // Long descending sweep — the "you screwed up" cue.
+        s.add_sweep(880.0f, 110.0f, 1.20f, 0.50f);
+        break;
 
-        case SfxId::ExtraLife:
-            // Three ascending notes — major triad.
-            s.add_sine(523.0f, 0.10f, 0.45f, false);  // C5
-            s.add_sine(659.0f, 0.10f, 0.45f, false);  // E5
-            s.add_sine(784.0f, 0.20f, 0.45f, true);   // G5
-            break;
+    case SfxId::ExtraLife:
+        // Three ascending notes — major triad.
+        s.add_sine(523.0f, 0.10f, 0.45f, false); // C5
+        s.add_sine(659.0f, 0.10f, 0.45f, false); // E5
+        s.add_sine(784.0f, 0.20f, 0.45f, true);  // G5
+        break;
 
-        case SfxId::LevelStart:
-            // Quick four-note jingle — "ready!"
-            s.add_sine(523.0f, 0.10f, 0.40f, false);  // C5
-            s.add_sine(659.0f, 0.10f, 0.40f, false);  // E5
-            s.add_sine(784.0f, 0.10f, 0.40f, false);  // G5
-            s.add_sine(1047.0f, 0.18f, 0.40f, true);  // C6
-            break;
+    case SfxId::LevelStart:
+        // Quick four-note jingle — "ready!"
+        s.add_sine(523.0f, 0.10f, 0.40f, false); // C5
+        s.add_sine(659.0f, 0.10f, 0.40f, false); // E5
+        s.add_sine(784.0f, 0.10f, 0.40f, false); // G5
+        s.add_sine(1047.0f, 0.18f, 0.40f, true); // C6
+        break;
 
-        case SfxId::MenuClick:
-            // Short blip.
-            s.add_square(440.0f, 0.030f, 0.30f, true);
-            break;
+    case SfxId::MenuClick:
+        // Short blip.
+        s.add_square(440.0f, 0.030f, 0.30f, true);
+        break;
 
-        case SfxId::Count:
-            break;
+    case SfxId::Count:
+        break;
     }
     return s.to_wav();
 }
@@ -272,7 +287,7 @@ float g_bgm_vol = 0.4f;
 void apply_volumes() {
     if (!g_engine_ready)
         return;
-    for (auto& slot : g_sfx) {
+    for (auto &slot : g_sfx) {
         if (slot.ready) {
             ma_sound_set_volume(&slot.sound, g_master_vol * g_sfx_vol);
         }
@@ -282,20 +297,21 @@ void apply_volumes() {
     }
 }
 
-bool init_slot(SoundSlot& slot, std::vector<std::uint8_t> wav, bool looping) {
+bool init_slot(SoundSlot &slot, std::vector<std::uint8_t> wav, bool looping) {
     slot.wav_bytes = std::move(wav);
     if (slot.wav_bytes.empty())
         return false;
 
     ma_decoder_config dec_cfg = ma_decoder_config_init_default();
-    if (ma_decoder_init_memory(
-            slot.wav_bytes.data(), slot.wav_bytes.size(), &dec_cfg, &slot.decoder) != MA_SUCCESS) {
+    if (ma_decoder_init_memory(slot.wav_bytes.data(), slot.wav_bytes.size(),
+                               &dec_cfg, &slot.decoder) != MA_SUCCESS) {
         return false;
     }
     // MA_SOUND_FLAG_DECODE pre-decodes upfront; trade RAM for zero-jitter
     // playback. Our SFX are tiny, so the cost is negligible.
-    if (ma_sound_init_from_data_source(
-            &g_engine, &slot.decoder, MA_SOUND_FLAG_DECODE, nullptr, &slot.sound) != MA_SUCCESS) {
+    if (ma_sound_init_from_data_source(&g_engine, &slot.decoder,
+                                       MA_SOUND_FLAG_DECODE, nullptr,
+                                       &slot.sound) != MA_SUCCESS) {
         ma_decoder_uninit(&slot.decoder);
         return false;
     }
@@ -306,7 +322,7 @@ bool init_slot(SoundSlot& slot, std::vector<std::uint8_t> wav, bool looping) {
     return true;
 }
 
-}  // namespace
+} // namespace
 
 // =============================================================================
 // Public API
@@ -317,7 +333,8 @@ bool init() {
         return true;
 
     if (ma_engine_init(nullptr, &g_engine) != MA_SUCCESS) {
-        std::printf("[pacman:WARN] miniaudio engine init failed — running silent.\n");
+        std::printf(
+            "[pacman:WARN] miniaudio engine init failed — running silent.\n");
         return false;
     }
     g_engine_ready = true;
@@ -333,8 +350,7 @@ bool init() {
     init_slot(g_bgm, make_bgm(), /*looping=*/true);
     apply_volumes();
 
-    std::printf("[pacman] audio: engine up, %d/%d SFX loaded, BGM %s\n",
-                loaded,
+    std::printf("[pacman] audio: engine up, %d/%d SFX loaded, BGM %s\n", loaded,
                 static_cast<int>(SfxId::Count),
                 g_bgm.ready ? "loaded" : "NOT loaded");
     return true;
@@ -343,7 +359,7 @@ bool init() {
 void shutdown() {
     if (!g_engine_ready)
         return;
-    for (auto& slot : g_sfx) {
+    for (auto &slot : g_sfx) {
         if (slot.ready) {
             ma_sound_uninit(&slot.sound);
             ma_decoder_uninit(&slot.decoder);
@@ -365,7 +381,7 @@ void play(SfxId id) {
     const int idx = static_cast<int>(id);
     if (idx < 0 || idx >= static_cast<int>(SfxId::Count))
         return;
-    SoundSlot& slot = g_sfx[static_cast<std::size_t>(idx)];
+    SoundSlot &slot = g_sfx[static_cast<std::size_t>(idx)];
     if (!slot.ready)
         return;
     // Restart from the top — overlapping SFX of the same kind interrupt
@@ -422,14 +438,8 @@ void set_bgm_volume(float v01) {
     apply_volumes();
 }
 
-float master_volume() {
-    return g_master_vol;
-}
-float sfx_volume() {
-    return g_sfx_vol;
-}
-float bgm_volume() {
-    return g_bgm_vol;
-}
+float master_volume() { return g_master_vol; }
+float sfx_volume() { return g_sfx_vol; }
+float bgm_volume() { return g_bgm_vol; }
 
-}  // namespace audio
+} // namespace audio

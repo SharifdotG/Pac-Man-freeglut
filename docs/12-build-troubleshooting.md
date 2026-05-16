@@ -72,7 +72,7 @@ header bytes are correct.
 
 ## Hi-score doesn't persist
 
-The hi-score lives in `%APPDATA%/pacman-fg/savedata.txt`. If save
+The hi-score lives in `%APPDATA%/pacman-freeglut/savedata.txt`. If save
 fails, you'll see:
 
 ```text

@@ -35,7 +35,8 @@ class Score {
     }
 
     void next_level();        // resets per-level counters; bumps level number
-    void set_level(int lvl);  // explicit setter — used when loading a specific level by index
+    void set_level(int lvl);  // explicit setter — used when loading a specific
+                              // level by index
 
     // P11 will read/write hi-score from %APPDATA% via util::file. For now the
     // hi-score lives in memory only and resets when the process exits.

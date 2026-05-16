@@ -118,11 +118,13 @@ std::optional<Maze> parse_level(const std::string& contents) {
         for (int col = 0; col < kCols; ++col) {
             const char ch = line[static_cast<std::size_t>(col)];
             if (!parse_cell(ch, col, row, maze, spawns)) {
-                std::printf("[pacman:ERROR] level row %d col %d: bad char '%c' (0x%02X)\n",
-                            row,
-                            col,
-                            ch,
-                            static_cast<unsigned>(ch) & 0xFFu);
+                std::printf(
+                    "[pacman:ERROR] level row %d col %d: bad char '%c' "
+                    "(0x%02X)\n",
+                    row,
+                    col,
+                    ch,
+                    static_cast<unsigned>(ch) & 0xFFu);
                 return std::nullopt;
             }
         }

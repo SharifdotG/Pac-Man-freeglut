@@ -62,7 +62,7 @@ std::string appdata_path(const std::string &relative) {
         if (ch == '\\')
             ch = '/';
     }
-    return base + "/pacman-fg/" + relative;
+    return base + "/pacman-freeglut/" + relative;
 }
 
 bool write_text_file(const std::string &path, const std::string &content) {

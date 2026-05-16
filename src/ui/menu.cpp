@@ -87,7 +87,8 @@ void render_main_menu(int selected, int hi_score) {
         render::draw_text_centered(cx, y, buf);
     }
 
-    // === High-score readout (skip when 0 to keep the menu clean on first run) ===
+    // === High-score readout (skip when 0 to keep the menu clean on first run)
+    // ===
     if (hi_score > 0) {
         char buf[64];
         std::snprintf(buf, sizeof(buf), "HIGH SCORE: %d", hi_score);
@@ -98,7 +99,7 @@ void render_main_menu(int selected, int hi_score) {
     // === Footer / hint ===
     render::set_color(kFooterColor);
     render::draw_text_centered(cx, 700.0f, "Use Arrow keys / WASD + Enter to navigate");
-    render::draw_text_centered(cx, 724.0f, "CSE 426 Computer Graphics Lab — Spring 2025");
+    render::draw_text_centered(cx, 724.0f, "CSE 426 Computer Graphics Lab — Fall 2025");
 }
 
 }  // namespace ui

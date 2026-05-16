@@ -5,19 +5,20 @@
 #include <vector>
 
 #include "core/state.h"
-
+#include "gameplay/combo.h"
+#include "gameplay/fruit.h"
 #include "gameplay/ghost.h"
 #include "gameplay/modes.h"
 #include "gameplay/pacman.h"
+#include "gameplay/perks.h"
 #include "gameplay/score.h"
-
 #include "util/direction.h"
 #include "world/maze.h"
 
 namespace core {
 
 class Game {
-  public:
+   public:
     bool init();
     void update(double dt_seconds);
     void render();
@@ -26,7 +27,7 @@ class Game {
     // shutdown so the next launch picks them up.
     void save_user_settings();
 
-  private:
+   private:
     // === transitions
     bool load_level(int level_index);
     void start_new_game();
@@ -47,11 +48,8 @@ class Game {
     void update_perk_on_map(float dt);
     void update_active_perk(float dt);
     void try_pickup_perk();
-
-#if 0
     void on_perk_activated(gameplay::PerkKind kind);
     void on_perk_expired(gameplay::PerkKind kind);
-#endif
 
     void update_blinky_ability(float dt);
     void update_clyde_clone(float dt);
@@ -81,11 +79,11 @@ class Game {
     void compute_reachable_tiles();
 
     std::optional<world::Maze> m_maze;
-
     gameplay::Pacman m_pacman;
     std::array<gameplay::Ghost, 4> m_ghosts;
     gameplay::WaveTimer m_wave;
     gameplay::Score m_score;
+    gameplay::Fruit m_fruit;
 
     GameState m_state = GameState::Splash;
     float m_state_timer = 0.0f;
@@ -107,32 +105,27 @@ class Game {
     // Reset on start_new_game.
     float m_play_time_seconds = 0.0f;
 
-// === P10: perks ==========================================================
-#if 0
-    gameplay::Perk m_perk_on_map; // visible pickup
-    std::optional<gameplay::ActivePerk>
-    m_active_perk;                   // current effect (one at a time)
-#endif
-    float m_perk_spawn_cooldown = 30.0f; // seconds until next try
+    // === P10: perks ==========================================================
+    gameplay::Perk m_perk_on_map;                       // visible pickup
+    std::optional<gameplay::ActivePerk> m_active_perk;  // current effect (one at a time)
+    float m_perk_spawn_cooldown = 30.0f;                // seconds until next try
 
     // P12: tiles reachable by Pac from his spawn. Filled by
     // compute_reachable_tiles() at level load. Each entry is a packed
     // (col * kRows + row) so we don't need to build a std::pair vector.
     std::vector<int> m_reachable_tiles;
 
-// === P10: combo / popups =================================================
-#if 0
+    // === P10: combo / popups =================================================
     gameplay::Combo m_combo;
-#endif
 
     // === P10: Blinky fire-burst ability =====================================
     enum class BlinkyAbilState : unsigned char {
-        Cooldown,  // counting down
-        Telegraph, // 0.5s warning flash
-        Firing,    // 0.4s active fire
+        Cooldown,   // counting down
+        Telegraph,  // 0.5s warning flash
+        Firing,     // 0.4s active fire
     };
     BlinkyAbilState m_blinky_state = BlinkyAbilState::Cooldown;
-    float m_blinky_state_timer = 12.0f; // initial cooldown
+    float m_blinky_state_timer = 12.0f;  // initial cooldown
     int m_blinky_fire_origin_col = 0;
     int m_blinky_fire_origin_row = 0;
     util::Direction m_blinky_fire_dir = util::Direction::Left;
@@ -156,4 +149,4 @@ class Game {
     bool m_game_over_logged = false;
 };
 
-} // namespace core
+}  // namespace core

@@ -40,6 +40,8 @@ add_executable(pacman
     src/ui/help.cpp
     src/ui/pause.cpp
     src/ui/gameover.cpp
+    src/render/camera.cpp
+    src/render/particles.cpp
 )
 
 target_include_directories(pacman PRIVATE
